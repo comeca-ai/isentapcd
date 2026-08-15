@@ -10,6 +10,7 @@ const NAV = [
   { to: '/pre-analise', label: 'Pré-análise grátis' },
   { to: '/sobre', label: 'Quem somos' },
   { to: '/transparencia', label: 'Transparência' },
+  { to: '/roadmap', label: 'Roadmap' },
 ]
 
 const GUIA = [

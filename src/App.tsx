@@ -13,6 +13,7 @@ import Privacidade from '@/pages/Privacidade'
 import Contato from '@/pages/Contato'
 import Simulador from '@/pages/Simulador'
 import PreAnalise from '@/pages/PreAnalise'
+import Roadmap from '@/pages/Roadmap'
 import AppShell from '@/components/app/AppShell'
 import Dashboard from '@/pages/app/Dashboard'
 import Documentos from '@/pages/app/Documentos'
@@ -40,6 +41,7 @@ export default function App() {
       <Route path="/privacidade" element={<Layout><Privacidade /></Layout>} />
       <Route path="/contato" element={<Layout><Contato /></Layout>} />
       <Route path="/simulador" element={<Layout><Simulador /></Layout>} />
+      <Route path="/roadmap" element={<Layout><Roadmap /></Layout>} />
       {/* Quiz imersivo: sem navbar pública (foco total na conversão) */}
       <Route path="/pre-analise" element={<PreAnalise />} />
       <Route path="/entrar" element={<Layout><Entrar /></Layout>} />
