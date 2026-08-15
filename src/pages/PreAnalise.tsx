@@ -237,7 +237,7 @@ export default function PreAnalise() {
                 alt="Pessoa sentada numa poltrona respondendo a um tablet, com um gato no colo — dá para fazer de casa, no sofá."
                 width={420}
                 height={420}
-                className="w-full max-w-[420px] rounded-card"
+                className="w-full max-w-[420px] rounded-card max-h-[34vh] object-cover object-top sm:max-h-none"
                 initial={reduced ? false : { opacity: 0, scale: 0.92 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}

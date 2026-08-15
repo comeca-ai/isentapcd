@@ -47,12 +47,13 @@ export default function App() {
       <Route path="/entrar" element={<Layout><Entrar /></Layout>} />
       <Route path="/registro" element={<Layout><Registrar /></Layout>} />
 
-      {/* Área logada (claro, escopo .app-light via AppShell) */}
-      <Route path="/app" element={<RequireAuth><AppShell><Dashboard /></AppShell></RequireAuth>} />
+      {/* Área logada (claro, escopo .app-light). Dashboard/Pagamento/Conta já se
+          embrulham em AppShell; Documentos/Cadastro recebem o shell aqui. */}
+      <Route path="/app" element={<RequireAuth><Dashboard /></RequireAuth>} />
       <Route path="/app/documentos" element={<RequireAuth><AppShell><Documentos /></AppShell></RequireAuth>} />
       <Route path="/app/cadastro" element={<RequireAuth><AppShell><Cadastro /></AppShell></RequireAuth>} />
-      <Route path="/app/pagamento" element={<RequireAuth><AppShell><Pagamento /></AppShell></RequireAuth>} />
-      <Route path="/app/conta" element={<RequireAuth><AppShell><Conta /></AppShell></RequireAuth>} />
+      <Route path="/app/pagamento" element={<RequireAuth><Pagamento /></RequireAuth>} />
+      <Route path="/app/conta" element={<RequireAuth><Conta /></RequireAuth>} />
 
       {/* Admin (claro; AdminShell é layout-route com <Outlet/>) */}
       <Route path="/admin" element={<RequireAuth role="admin"><AdminShell /></RequireAuth>}>

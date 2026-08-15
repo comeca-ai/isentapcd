@@ -99,7 +99,7 @@ export default function Dashboard() {
               className="flex flex-wrap items-center gap-3 rounded-card border border-success/40 bg-success/10 px-5 py-4"
             >
               <Sparkles className="h-5 w-5 shrink-0 text-success" aria-hidden="true" />
-              <p className="flex-1 text-small font-medium text-txt">
+              <p className="min-w-0 flex-1 basis-full text-small font-medium text-txt sm:basis-0">
                 Ainda não fez a pré-análise? São 2 minutos e ela monta seu mapa.
               </p>
               <Link
