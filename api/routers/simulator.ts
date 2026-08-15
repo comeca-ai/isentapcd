@@ -96,10 +96,17 @@ export const simulatorRouter = createRouter({
       case "full":
         percentual = 1;
         if (ipva.teto !== null && preco > ipva.teto) {
-          percentual = 0;
-          warnings.push(
-            `IPVA em ${input.uf}: veículo acima do teto de R$ ${ipva.teto.toLocaleString("pt-BR")} — sem isenção.`,
-          );
+          if (input.uf === "SP" && preco <= 120_000) {
+            // SP (dossiê §4): 70 mil total / 120 mil parcial — paga sobre o excedente
+            percentual = round2(70_000 / preco);
+            ipvaDisclaimer +=
+              " Em SP, entre R$ 70 mil e R$ 120 mil a isenção de IPVA é parcial: paga-se só sobre o excedente.";
+          } else {
+            percentual = 0;
+            warnings.push(
+              `IPVA em ${input.uf}: veículo acima do teto de R$ ${ipva.teto.toLocaleString("pt-BR")} — sem isenção.`,
+            );
+          }
         }
         break;
       case "partial":
