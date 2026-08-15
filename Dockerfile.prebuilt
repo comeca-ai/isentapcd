@@ -1,0 +1,19 @@
+# IsentaPCD — runtime-only. O BUILD é feito FORA do container (ver README-DEPLOY.md):
+#   npm ci --include=dev && npm run build && npm prune --omit=dev && npm install --no-save tsx drizzle-kit
+# (npm quebra dentro de containers em alguns hosts: "Exit handler never called!")
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# node_modules já vem podado (--omit=dev) + tsx/drizzle-kit do passo de build
+COPY package.json package-lock.json ./
+COPY node_modules ./node_modules
+COPY dist ./dist
+# migrações e seed são aplicados em deploy/upgrade via `npm run db:migrate`
+COPY db ./db
+COPY contracts ./contracts
+COPY drizzle.config.ts ./
+
+EXPOSE 3000
+CMD ["node", "dist/boot.js"]

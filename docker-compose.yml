@@ -1,0 +1,53 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prebuilt
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: mysql://isentapcd:${MYSQL_PASSWORD}@mysql:3306/isentapcd
+      PORT: "3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks: [internal, web]
+
+  mysql:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: isentapcd
+      MYSQL_USER: isentapcd
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-pisentapcd"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    networks: [internal]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+    networks: [web]
+
+volumes:
+  mysql_data:
+  caddy_data:
+  caddy_config:
+
+networks:
+  internal:
+  web:

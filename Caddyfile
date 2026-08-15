@@ -1,0 +1,5 @@
+# Substitua pelo seu domínio. HTTPS automático (Let's Encrypt) após a virada de DNS.
+{$DOMAIN:seudominio.com.br} {
+	reverse_proxy app:3000
+	encode zstd gzip
+}

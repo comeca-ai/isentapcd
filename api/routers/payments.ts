@@ -3,7 +3,8 @@ import { eq } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { createRouter, authedQuery, adminQuery } from "../middleware";
 import { getDb } from "../queries/connection";
-import { processes, users } from "@db/schema";
+import { leads, processes, profiles, users } from "@db/schema";
+import { inArray } from "drizzle-orm";
 import { PRICE_EXECUTION, REFERRAL_REWARD } from "@contracts/constants";
 import { getProcessByUser, recordEvent } from "./helpers";
 import { sendEmail, tplPagamentoConfirmado } from "../email";
@@ -11,14 +12,36 @@ import { sendEmail, tplPagamentoConfirmado } from "../email";
 export const paymentsRouter = createRouter({
   /** Status de pagamento do usuário logado. */
   status: authedQuery.query(async ({ ctx }) => {
+    const db = getDb();
     const process = await getProcessByUser(ctx.user.id);
-    const hasReferral = Boolean(ctx.user.referredBy);
+    // "Quem indica ganha": o desconto é de QUEM INDICOU (tem ≥1 indicado que
+    // casou por nome/e-mail/telefone em users/leads.referredBy), não de quem foi indicado.
+    const profile = await db.query.profiles.findFirst({
+      where: eq(profiles.userId, ctx.user.id),
+    });
+    const keys = [ctx.user.name, ctx.user.email, profile?.telefone].filter(
+      (k): k is string => Boolean(k),
+    );
+    let referralDiscount = 0;
+    if (keys.length > 0) {
+      const [ru] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(inArray(users.referredBy, keys))
+        .limit(1);
+      const [rl] = await db
+        .select({ id: leads.id })
+        .from(leads)
+        .where(inArray(leads.referredBy, keys))
+        .limit(1);
+      if (ru || rl) referralDiscount = REFERRAL_REWARD;
+    }
     return {
       paidAt: process?.paidAt ?? null,
       price: PRICE_EXECUTION,
       referralReward: REFERRAL_REWARD,
-      referralDiscount: hasReferral ? REFERRAL_REWARD : 0,
-      finalPrice: hasReferral ? PRICE_EXECUTION - REFERRAL_REWARD : PRICE_EXECUTION,
+      referralDiscount,
+      finalPrice: PRICE_EXECUTION - referralDiscount,
     };
   }),
 
