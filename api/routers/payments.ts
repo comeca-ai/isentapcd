@@ -5,7 +5,7 @@ import { createRouter, authedQuery, adminQuery } from "../middleware";
 import { getDb } from "../queries/connection";
 import { leads, processes, profiles, users } from "@db/schema";
 import { inArray } from "drizzle-orm";
-import { PRICE_EXECUTION, REFERRAL_REWARD } from "@contracts/constants";
+import { PAYWALL_ENABLED, PRICE_EXECUTION, REFERRAL_REWARD } from "@contracts/constants";
 import { getProcessByUser, recordEvent } from "./helpers";
 import { sendEmail, tplPagamentoConfirmado } from "../email";
 
@@ -38,6 +38,7 @@ export const paymentsRouter = createRouter({
     }
     return {
       paidAt: process?.paidAt ?? null,
+      paywallEnabled: PAYWALL_ENABLED,
       price: PRICE_EXECUTION,
       referralReward: REFERRAL_REWARD,
       referralDiscount,

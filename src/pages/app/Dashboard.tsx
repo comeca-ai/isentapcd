@@ -34,6 +34,7 @@ import { cn } from '@/lib/utils'
 import {
   DOC_TYPE_MAP,
   FEDERAL,
+  PAYWALL_ENABLED,
   PRICE_EXECUTION,
   REFERRAL_REWARD,
   REGULATORY_DEADLINE,
@@ -161,7 +162,7 @@ export default function Dashboard() {
                   </strong>{' '}
                   ({doneCount} de {totalStages} concluídas)
                 </p>
-                {!paid && (
+                {!paid && PAYWALL_ENABLED && (
                   <p className="mt-4 rounded-input border border-warn/40 bg-warn/10 px-4 py-3 text-small text-txt">
                     Você está no plano gratuito. Desbloqueie revisão humana, checklist completo e
                     suporte até a nota fiscal.{' '}

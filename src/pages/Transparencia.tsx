@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight, Check, MessageCircle, X } from 'lucide-react'
 import TrustBadge from '@/components/TrustBadge'
 import { PRECO_ACOMPANHAMENTO, WHATSAPP_URL } from '@/lib/constants'
+import { PAYWALL_ENABLED } from '@contracts/constants'
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number]
 
@@ -57,7 +58,9 @@ export default function Transparencia() {
   const reduced = useReducedMotion()
 
   useEffect(() => {
-    document.title = 'Transparência: o que é grátis e o que custa R$ 497 — IsentaPCD'
+    document.title = PAYWALL_ENABLED
+      ? 'Transparência: o que é grátis e o que custa R$ 497 — IsentaPCD'
+      : 'Transparência: durante a POC, tudo grátis — IsentaPCD'
     return () => {
       document.title = 'IsentaPCD'
     }
@@ -75,7 +78,9 @@ export default function Transparencia() {
             Transparência
           </p>
           <h1 className="mt-4 max-w-[20ch] text-h1 font-medium">
-            O que é grátis, o que custa R$ 497 — e por quê.
+            {PAYWALL_ENABLED
+              ? 'O que é grátis, o que custa R$ 497 — e por quê.'
+              : 'Durante a prova de conceito, tudo é grátis.'}
           </h1>
           <p className="mt-6 max-w-prose68 text-lead text-txt-2">
             Esta página existe porque confiança não se pede: se mostra. Aqui está tudo aberto —
@@ -87,7 +92,9 @@ export default function Transparencia() {
       {/* Grátis vs pago */}
       <section aria-labelledby="gratis-pago-title" className="mx-auto max-w-[1080px] px-6 py-16 lg:px-10">
         <h2 id="gratis-pago-title" className="text-h2 font-medium">
-          Grátis para sempre vs. acompanhamento completo
+          {PAYWALL_ENABLED
+            ? 'Grátis para sempre vs. acompanhamento completo'
+            : 'Na prova de conceito, o acompanhamento completo também é grátis'}
         </h2>
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           <div className="rounded-card border border-line bg-surface p-6 lg:p-8">
@@ -109,10 +116,21 @@ export default function Transparencia() {
               Acompanhamento completo
             </p>
             <p className="mt-1 font-display text-h3 font-medium">
-              R$ {PRECO_ACOMPANHAMENTO}{' '}
-              <span className="font-sans text-small font-normal text-txt-2">
-                pagamento único, por processo
-              </span>
+              {PAYWALL_ENABLED ? (
+                <>
+                  R$ {PRECO_ACOMPANHAMENTO}{' '}
+                  <span className="font-sans text-small font-normal text-txt-2">
+                    pagamento único, por processo
+                  </span>
+                </>
+              ) : (
+                <>
+                  R$ 0{' '}
+                  <span className="font-sans text-small font-normal text-txt-2">
+                    grátis durante a prova de conceito
+                  </span>
+                </>
+              )}
             </p>
             <ul className="mt-6 space-y-3">
               {PAGO.map((item) => (
@@ -207,7 +225,8 @@ export default function Transparencia() {
         </p>
       </section>
 
-      {/* Breakdown do preço */}
+      {/* Breakdown do preço (suspenso na POC — paywall desligado) */}
+      {PAYWALL_ENABLED ? (
       <section aria-labelledby="preco-title" className="bg-bg-alt">
         <div className="mx-auto max-w-[1080px] px-6 py-24 lg:px-10">
           <h2 id="preco-title" className="text-h2 font-medium">
@@ -244,6 +263,21 @@ export default function Transparencia() {
           </p>
         </div>
       </section>
+      ) : (
+      <section aria-labelledby="preco-title" className="bg-bg-alt">
+        <div className="mx-auto max-w-[1080px] px-6 py-24 lg:px-10">
+          <h2 id="preco-title" className="text-h2 font-medium">
+            E depois da prova de conceito?
+          </h2>
+          <p className="mt-4 max-w-prose68 text-body text-txt-2">
+            Enquanto durar a POC, todo o acompanhamento — revisão humana de documentos, checklist
+            por órgão, alertas de prazo e suporte no WhatsApp — é grátis. Quando o serviço virar
+            pago, vamos avisar com antecedência, publicar o preço aqui e nunca cobrar nada sem
+            você concordar antes.
+          </p>
+        </div>
+      </section>
+      )}
 
       {/* CTA duplo */}
       <section className="mx-auto max-w-[1080px] px-6 py-24 lg:px-10">

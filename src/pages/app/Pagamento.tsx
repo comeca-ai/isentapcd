@@ -20,7 +20,7 @@ import { useNow } from '@/components/app/useNow'
 import { trpc } from '@/providers/trpc'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { formatBRL, WHATSAPP_NUMBER } from '@/lib/constants'
-import { PRICE_EXECUTION } from '@contracts/constants'
+import { PAYWALL_ENABLED, PRICE_EXECUTION } from '@contracts/constants'
 
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1]
 
@@ -43,6 +43,7 @@ export default function Pagamento() {
   const status = trpc.payments.status.useQuery(undefined, { retry: false })
 
   const paidAt = status.data?.paidAt ? new Date(status.data.paidAt) : null
+  const paywallEnabled = status.data?.paywallEnabled ?? PAYWALL_ENABLED
   const finalPrice = status.data?.finalPrice ?? PRICE_EXECUTION
   const referralDiscount = status.data?.referralDiscount ?? 0
 
@@ -84,7 +85,10 @@ export default function Pagamento() {
 
         {status.data && paidAt && <PaidState paidAt={paidAt} reduced={reduced} />}
 
-        {status.data && !paidAt && (
+        {/* POC: paywall desligado — nada a pagar, execução assistida liberada */}
+        {status.data && !paidAt && !paywallEnabled && <PocFreeState reduced={reduced} />}
+
+        {status.data && !paidAt && paywallEnabled && (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[7fr_5fr]">
             {/* Coluna oferta */}
             <motion.div {...fade(0)}>
@@ -291,6 +295,58 @@ function PriceNumber({ value, reduced }: { value: number; reduced: boolean }) {
     <span className="tnum align-middle font-mono text-[2.5rem] font-semibold leading-none text-txt">
       {formatBRL(reduced ? value : shown)}
     </span>
+  )
+}
+
+// ── Estado POC (paywall off) ───────────────────────────────────────────────
+
+function PocFreeState({ reduced }: { reduced: boolean }) {
+  return (
+    <motion.div
+      initial={reduced ? false : { opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduced ? 0 : 0.5, ease: EASE }}
+      className="mx-auto max-w-[720px]"
+    >
+      <div className="rounded-card border border-success/40 bg-success/5 p-8 text-center shadow-card-light">
+        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15">
+          <CheckCircle2 className="h-9 w-9 text-success" aria-hidden="true" />
+        </span>
+        <h1 className="mt-4 font-display text-h2 font-medium">
+          Execução assistida liberada na POC
+        </h1>
+        <p className="mt-2 text-lead text-txt-2">
+          Durante a prova de conceito, tudo é grátis — nada a pagar por aqui.
+        </p>
+        <ul className="mx-auto mt-6 flex max-w-md flex-col gap-3 text-left">
+          {DESTRAVA.map((item) => (
+            <li key={item} className="flex items-start gap-3 text-body text-txt">
+              <Check className="mt-1 h-5 w-5 shrink-0 text-success" aria-hidden="true" />
+              {item}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link
+            to="/app/documentos"
+            className="inline-flex min-h-[52px] items-center gap-2 rounded-btn bg-accent px-6 text-body font-bold text-on-accent transition-colors hover:bg-accent-hover active:scale-[0.98]"
+          >
+            <UploadCloud className="h-5 w-5" aria-hidden="true" />
+            Enviar documentos
+          </Link>
+          <Link
+            to="/app"
+            className="inline-flex min-h-[52px] items-center gap-2 rounded-btn border border-line px-6 text-body font-bold text-txt transition-colors hover:bg-bg-alt"
+          >
+            Voltar ao painel
+            <ArrowRight className="h-5 w-5" aria-hidden="true" />
+          </Link>
+        </div>
+        <p className="mt-6 text-small text-txt-2">
+          Quando a POC terminar, avisamos com antecedência antes de qualquer cobrança.
+        </p>
+      </div>
+    </motion.div>
   )
 }
 

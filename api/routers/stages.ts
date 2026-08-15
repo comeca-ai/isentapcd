@@ -5,6 +5,7 @@ import { createRouter, authedQuery } from "../middleware";
 import { getDb } from "../queries/connection";
 import { processStages, processes } from "@db/schema";
 import {
+  PAYWALL_ENABLED,
   STAGE_MAP,
   STAGES,
   type StageKey,
@@ -88,7 +89,7 @@ export const stagesRouter = createRouter({
           description: def.description,
           status,
           postGate: def.postGate,
-          locked: def.postGate && !paid, // cadeado visual no front
+          locked: def.postGate && !paid && PAYWALL_ENABLED, // cadeado visual no front
           dependsOn: deps,
           blockedBy,
         };
@@ -108,7 +109,8 @@ export const stagesRouter = createRouter({
       const process = await getProcessByUser(ctx.user.id);
       if (!process) throw new TRPCError({ code: "NOT_FOUND", message: "Processo não encontrado." });
       const def = STAGE_MAP[input.stageKey];
-      if (def.postGate && process.paidAt === null) {
+      // POC: com o paywall desligado (PAYWALL_ENABLED=false) a checagem é pulada.
+      if (def.postGate && process.paidAt === null && PAYWALL_ENABLED) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "PAYMENT_REQUIRED",

@@ -3,6 +3,7 @@ import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { Link } from 'react-router'
 import { Check, MessageCircle, ArrowRight } from 'lucide-react'
 import { WHATSAPP_URL } from '@/lib/constants'
+import { PAYWALL_ENABLED } from '@contracts/constants'
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number]
 
@@ -57,7 +58,7 @@ export default function Pricing() {
   return (
     <section aria-labelledby="preco-title" className="mx-auto max-w-content px-6 py-24 lg:px-10">
       <h2 id="preco-title" className="text-h2 font-medium">
-        Um preço. Sem letra miúda.
+        {PAYWALL_ENABLED ? 'Um preço. Sem letra miúda.' : 'Durante a prova de conceito, tudo grátis.'}
       </h2>
 
       <div className="mt-12 grid gap-6 lg:grid-cols-2">
@@ -83,10 +84,22 @@ export default function Pricing() {
           className="rounded-card border border-accent bg-surface p-8 shadow-amber-glow"
         >
           <h3 className="text-h3 font-medium">Acompanhamento completo</h3>
-          <p className="mt-4">
-            <PriceCounter />{' '}
-            <span className="text-small text-txt-2">(pagamento único)</span>
-          </p>
+          {PAYWALL_ENABLED ? (
+            <p className="mt-4">
+              <PriceCounter />{' '}
+              <span className="text-small text-txt-2">(pagamento único)</span>
+            </p>
+          ) : (
+            <>
+              <p className="mt-4">
+                <span className="tnum font-mono text-6xl font-semibold text-accent">R$ 0</span>{' '}
+                <span className="text-small text-txt-2">durante a prova de conceito</span>
+              </p>
+              <p className="mt-2 inline-flex rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 text-small font-bold text-accent">
+                Grátis durante a prova de conceito
+              </p>
+            </>
+          )}
           <ul className="mt-6 space-y-3">
             {PAGO.map((item) => (
               <li key={item} className="flex items-start gap-3 text-body text-txt-2">
@@ -99,7 +112,9 @@ export default function Pricing() {
       </div>
 
       <p className="mt-10 max-w-prose68 text-lead text-txt">
-        Se a economia típica é de ~R$ 12 mil, o acompanhamento se paga dezenas de vezes.
+        {PAYWALL_ENABLED
+          ? 'Se a economia típica é de ~R$ 12 mil, o acompanhamento se paga dezenas de vezes.'
+          : 'Enquanto durar a prova de conceito, você tem o acompanhamento completo sem pagar nada — incluindo revisão humana dos documentos.'}
       </p>
 
       <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -122,7 +137,9 @@ export default function Pricing() {
       </div>
 
       <p className="mt-6 text-small text-txt-2">
-        Sem mensalidade · Sem taxa escondida · Você só paga se decidir executar com a gente
+        {PAYWALL_ENABLED
+          ? 'Sem mensalidade · Sem taxa escondida · Você só paga se decidir executar com a gente'
+          : 'Sem mensalidade · Sem taxa escondida · Quando a POC terminar, avisamos antes de qualquer cobrança'}
       </p>
     </section>
   )

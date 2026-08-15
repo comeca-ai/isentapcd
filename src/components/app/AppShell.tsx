@@ -14,6 +14,7 @@ import {
 import { trpc } from '@/providers/trpc'
 import { useAuth } from '@/hooks/useAuth'
 import { WHATSAPP_URL, LEGAL_DISCLAIMER } from '@/lib/constants'
+import { PAYWALL_ENABLED } from '@contracts/constants'
 import { cn } from '@/lib/utils'
 
 /**
@@ -100,7 +101,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
                   : 'border-warn/40 bg-warn/10 text-warn',
               )}
             >
-              {paid ? 'Acompanhamento ativo' : 'Pré-análise gratuita'}
+              {paid ? 'Acompanhamento ativo' : PAYWALL_ENABLED ? 'Pré-análise gratuita' : 'POC — tudo liberado'}
             </span>
 
             {/* Sino → feed de atividades do dashboard */}
@@ -260,7 +261,7 @@ function SidebarContent({ paid }: { paid: boolean }) {
           </a>
         </section>
 
-        {!paid && (
+        {!paid && PAYWALL_ENABLED && (
           <Link
             to="/app/pagamento"
             className="block rounded-btn border border-warn/40 bg-warn/10 px-4 py-3 text-center text-small font-bold text-warn transition-colors hover:bg-warn/15"

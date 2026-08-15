@@ -10,6 +10,12 @@ export const PRICE_EXECUTION = 497; // R$ — acompanhamento completo (pagamento
 export const REFERRAL_REWARD = 100; // R$ de desconto na execução quando indicado converte
 export const REGULATORY_DEADLINE = "2026-12-31"; // fim do regime vigente (Lei 8.989/95 art. 9º + Conv. 21/2026)
 
+/**
+ * POC v3: paywall DESLIGADO. Todo o código de pagamento continua no lugar —
+ * para reativar basta voltar para `true`. Front e back leem esta flag.
+ */
+export const PAYWALL_ENABLED = false;
+
 // ── Constantes federais canônicas (dossiê §10.2) ───────────────────────────
 export const FEDERAL = {
   IPI_CEILING: 200_000,
@@ -1100,3 +1106,338 @@ export const DISCLAIMER_SIMULADOR =
   "Estimativa com base nas regras de 2026 (Lei 8.989/95, Convênio ICMS 38/2012 e leis estaduais). " +
   "Quem confirma o benefício é sempre o órgão público. IPVA do 1º ano pode ser proporcional " +
   "conforme a regra da sua UF.";
+
+// ── Trilha guiada de documentos (POC v3) ───────────────────────────────────
+/**
+ * Achata o DOC_CHECKLIST numa sequência numerada única, na ordem lógica do
+ * processo: identidade/CPF → laudo → CNH → guias/perícia → autorização IPI →
+ * requerimento ICMS → NF-e → pós-compra.
+ */
+export const DOC_TRAIL: { phase: string; docTypes: string[] }[] = [
+  { phase: "Quem é você", docTypes: ["doc_identidade", "cpf", "comprovante_residencia"] },
+  { phase: "Laudos", docTypes: ["laudo_medico", "laudo_pericial_detran"] },
+  { phase: "CNH", docTypes: ["cnh_restricao", "cnh_condutores"] },
+  { phase: "Taxas e guias", docTypes: ["guia_pericia", "guia_taxa_estadual"] },
+  {
+    phase: "Isenção de IPI (Receita Federal)",
+    docTypes: ["declaracao_disponibilidade", "autorizacao_ipi"],
+  },
+  {
+    phase: "Isenção de ICMS (estado)",
+    docTypes: [
+      "requerimento_icms",
+      "comprovante_domicilio_estadual",
+      "declaracao_quitacao",
+      "autorizacao_icms",
+    ],
+  },
+  { phase: "Compra do carro", docTypes: ["nf_compra"] },
+  { phase: "Depois da compra", docTypes: ["crlv", "nf_adaptacao", "csv"] },
+];
+
+/** Ordem plana da trilha (índice = passo - 1). */
+export const DOC_TRAIL_ORDER: string[] = DOC_TRAIL.flatMap((p) => p.docTypes);
+
+/** Instrução em linguagem simples para o card "Seu próximo passo". */
+export const DOC_TRAIL_INSTRUCTIONS: Record<string, string> = {
+  doc_identidade:
+    "Tire uma foto nítida do RG (frente e verso) ou da CNH da pessoa com deficiência e envie aqui.",
+  cpf: "Envie o comprovante de situação cadastral do CPF — dá para baixar grátis no site da Receita Federal.",
+  comprovante_residencia: "Envie uma conta de água, luz ou telefone recente, no nome da família.",
+  laudo_medico:
+    "Este é o documento mais importante: o laudo precisa ter CID, assinatura do médico com CRM e dizer como a deficiência afeta a mobilidade ou a condução.",
+  laudo_pericial_detran:
+    "Agende a perícia no órgão do seu estado (em SP é o IMESC) e envie o laudo que eles entregarem.",
+  cnh_restricao:
+    "Se você vai dirigir, envie a CNH — se ainda não tem as observações de restrição, tudo bem: para o IPI elas não são exigidas.",
+  cnh_condutores:
+    "Se outra pessoa vai dirigir por você, envie a CNH de até 3 condutores que moram na mesma cidade.",
+  guia_pericia:
+    "Pague a taxa da perícia (ex.: IMESC em SP) e envie o comprovante — a foto do boleto pago serve.",
+  guia_taxa_estadual:
+    "Só alguns estados cobram taxa (RJ, SC, MS). Se o seu cobra, pague a guia e envie o comprovante.",
+  declaracao_disponibilidade:
+    "Baixe o modelo no site da Receita, preencha e assine — é dispensada se você for financiar o carro.",
+  autorizacao_ipi:
+    "Quando a Receita deferir seu pedido no SISEN, baixe a carta de autorização e envie aqui. Ela vale 270 dias.",
+  requerimento_icms:
+    "Protocol o pedido de ICMS no portal da Sefaz do seu estado e envie o comprovante de protocolo.",
+  comprovante_domicilio_estadual:
+    "Envie um comprovante de endereço no seu estado — vale conta de consumo recente.",
+  declaracao_quitacao:
+    "Quite qualquer IPVA ou multa em aberto e envie a certidão negativa da fazenda estadual.",
+  autorizacao_icms:
+    "Quando o estado deferir, baixe a autorização de ICMS e envie aqui. Atenção: ela vale 180 dias (SP: 270).",
+  nf_compra:
+    "Na compra, peça a NF no nome da pessoa com deficiência, com IPI destacado como isento, e envie aqui.",
+  crlv: "Depois de emplacar, envie o CRLV-e (documento do carro) em nome da pessoa com deficiência.",
+  nf_adaptacao: "Se o carro for adaptado, envie a nota fiscal da adaptação (prazo de 270 dias após a compra).",
+  csv: "Se houve adaptação, envie o Certificado de Segurança Veicular emitido por uma ITL licenciada.",
+};
+
+// ── OCR (Mistral) — checagens de sanidade por tipo de documento ────────────
+/**
+ * `anyOf`: alternativas separadas por "|" — basta encontrar UMA no texto
+ * normalizado (lowercase, sem acento) para a checagem passar.
+ * `msg`: achado em português simples quando nada é encontrado (nunca rejeita).
+ */
+export interface OcrKeywordCheck {
+  anyOf: string;
+  msg: string;
+}
+export interface OcrDocHint {
+  keywords: OcrKeywordCheck[];
+  exigeNome?: boolean; // ≥2 tokens do nome do usuário precisam aparecer
+  exigeCpf?: boolean; // os 11 dígitos do CPF do cadastro precisam aparecer
+}
+
+export const OCR_DOCTYPE_HINTS: Record<string, OcrDocHint> = {
+  doc_identidade: {
+    keywords: [
+      {
+        anyOf: "nascimento|filicao|registro",
+        msg: "Não encontramos dados típicos de identidade (nascimento, filiação ou registro) — confira se enviou o documento certo.",
+      },
+    ],
+    exigeNome: true,
+    exigeCpf: true,
+  },
+  cpf: {
+    keywords: [
+      {
+        anyOf: "cpf|cadastro de pessoa fisica|receita federal",
+        msg: "Não encontramos menção ao CPF ou à Receita Federal — o comprovante de situação cadastral é baixado no site da Receita.",
+      },
+    ],
+    exigeNome: true,
+    exigeCpf: true,
+  },
+  laudo_medico: {
+    keywords: [
+      { anyOf: "laudo", msg: "Não encontramos a palavra 'laudo' no documento — confira se é o arquivo certo." },
+      {
+        anyOf: "cid",
+        msg: "Não encontramos o CID no laudo — ele é obrigatório. Peça ao médico para incluir o código (ex.: CID G80).",
+      },
+      {
+        anyOf: "medico|crm",
+        msg: "Não encontramos a identificação do médico (nome ou CRM) — o laudo precisa estar assinado por médico, com CRM.",
+      },
+      {
+        anyOf: "deficiencia|diagnostico",
+        msg: "Não encontramos o diagnóstico ou a descrição da deficiência — laudo só com CID é a principal causa de indeferimento.",
+      },
+    ],
+    exigeNome: true,
+    exigeCpf: true,
+  },
+  comprovante_residencia: {
+    keywords: [
+      {
+        anyOf: "endereco|logradouro|cep|residencia",
+        msg: "Não encontramos um endereço no documento — envie uma conta de água, luz ou telefone recente.",
+      },
+    ],
+    exigeNome: true,
+  },
+  declaracao_disponibilidade: {
+    keywords: [
+      {
+        anyOf: "declaracao|declaro",
+        msg: "Não encontramos o texto da declaração — use o modelo oficial da Receita Federal.",
+      },
+      {
+        anyOf: "disponibilidade financeira|financiamento",
+        msg: "Não encontramos a menção à disponibilidade financeira ou ao financiamento — confira o modelo preenchido.",
+      },
+    ],
+    exigeNome: true,
+    exigeCpf: true,
+  },
+  autorizacao_ipi: {
+    keywords: [
+      {
+        anyOf: "sisen|receita federal",
+        msg: "Não encontramos menção ao SISEN ou à Receita Federal — a autorização de IPI é a carta emitida no SISEN.",
+      },
+      { anyOf: "ipi", msg: "Não encontramos menção ao IPI no documento — confira se é a carta de autorização certa." },
+      {
+        anyOf: "autorizacao|deferido",
+        msg: "Não encontramos a palavra 'autorização' ou 'deferido' — o documento precisa ser a autorização deferida.",
+      },
+    ],
+    exigeNome: true,
+    exigeCpf: true,
+  },
+  requerimento_icms: {
+    keywords: [
+      { anyOf: "icms", msg: "Não encontramos menção ao ICMS — confira se enviou o protocolo do pedido de isenção." },
+      {
+        anyOf: "requerimento|protocolo|solicitacao",
+        msg: "Não encontramos número de protocolo ou requerimento — envie o comprovante gerado no portal da Sefaz.",
+      },
+    ],
+    exigeNome: true,
+    exigeCpf: true,
+  },
+  comprovante_domicilio_estadual: {
+    keywords: [
+      {
+        anyOf: "endereco|logradouro|cep|domicilio",
+        msg: "Não encontramos um endereço no documento — envie uma conta recente do seu estado.",
+      },
+    ],
+    exigeNome: true,
+  },
+  declaracao_quitacao: {
+    keywords: [
+      {
+        anyOf: "quitacao|quite|certidao negativa|nada consta|sem debito",
+        msg: "Não encontramos a certidão ou declaração de quitação — emita a certidão negativa no site da Sefaz.",
+      },
+      {
+        anyOf: "ipva|fazenda|tributo|debito",
+        msg: "Não encontramos referência a tributos estaduais (IPVA/fazenda) — confira o documento enviado.",
+      },
+    ],
+    exigeNome: true,
+    exigeCpf: true,
+  },
+  cnh_condutores: {
+    keywords: [
+      {
+        anyOf: "habilitacao|cnh",
+        msg: "Não encontramos dados de CNH — envie a carteira de habilitação dos condutores autorizados.",
+      },
+      {
+        anyOf: "categoria",
+        msg: "Não encontramos a categoria da habilitação — a foto precisa mostrar a CNH inteira.",
+      },
+    ],
+  },
+  cnh_restricao: {
+    keywords: [
+      {
+        anyOf: "habilitacao|cnh",
+        msg: "Não encontramos dados de CNH — envie a carteira de habilitação.",
+      },
+      {
+        anyOf: "observac|restricao|categoria",
+        msg: "Não encontramos observações/restrições ou categoria — a foto precisa mostrar a CNH inteira.",
+      },
+    ],
+    exigeNome: true,
+  },
+  laudo_pericial_detran: {
+    keywords: [
+      {
+        anyOf: "pericia|laudo",
+        msg: "Não encontramos menção à perícia ou ao laudo — envie o documento entregue pelo órgão pericial.",
+      },
+      {
+        anyOf: "detran|imesc|clinica|perito",
+        msg: "Não encontramos a identificação do órgão pericial (Detran/IMESC/clínica) — confira o documento.",
+      },
+      {
+        anyOf: "medico|perito|crm",
+        msg: "Não encontramos a assinatura do médico perito — o laudo precisa identificar o profissional.",
+      },
+    ],
+    exigeNome: true,
+    exigeCpf: true,
+  },
+  nf_compra: {
+    keywords: [
+      {
+        anyOf: "nota fiscal|nf-e|danfe",
+        msg: "Não encontramos a identificação de nota fiscal (NF-e/DANFE) — confira o arquivo.",
+      },
+      {
+        anyOf: "chassi|veiculo|modelo",
+        msg: "Não encontramos dados do veículo (chassi/modelo) — envie a NF completa da compra.",
+      },
+      {
+        anyOf: "ipi",
+        msg: "Não encontramos o destaque do IPI — a NF precisa mostrar o IPI dispensado/isento.",
+      },
+    ],
+    exigeNome: true,
+    exigeCpf: true,
+  },
+  crlv: {
+    keywords: [
+      {
+        anyOf: "crlv|licenciamento|registro e licenciamento",
+        msg: "Não encontramos a identificação do CRLV — envie o documento do carro (CRLV-e).",
+      },
+      { anyOf: "placa", msg: "Não encontramos a placa do veículo — a foto precisa mostrar o CRLV inteiro." },
+      {
+        anyOf: "chassi|renavam",
+        msg: "Não encontramos chassi ou RENAVAM — confira se o documento é o CRLV.",
+      },
+    ],
+    exigeNome: true,
+    exigeCpf: true,
+  },
+  nf_adaptacao: {
+    keywords: [
+      {
+        anyOf: "nota fiscal|nf-e",
+        msg: "Não encontramos a identificação de nota fiscal — envie a NF da adaptação.",
+      },
+      {
+        anyOf: "adaptacao|adaptacoes",
+        msg: "Não encontramos menção à adaptação veicular — confira se a NF é a da oficina adaptadora.",
+      },
+    ],
+    exigeNome: true,
+  },
+  csv: {
+    keywords: [
+      {
+        anyOf: "certificado de seguranca veicular|csv",
+        msg: "Não encontramos a identificação do CSV — envie o Certificado de Segurança Veicular.",
+      },
+      {
+        anyOf: "itl|licenciada|inmetro",
+        msg: "Não encontramos a ITL licenciada no certificado — o CSV precisa ser emitido por ITL credenciada.",
+      },
+    ],
+    exigeNome: true,
+  },
+  guia_taxa_estadual: {
+    keywords: [
+      {
+        anyOf: "pagamento|pago|valor",
+        msg: "Não encontramos confirmação de pagamento — envie o comprovante da guia paga, não só o boleto.",
+      },
+      {
+        anyOf: "vencimento",
+        msg: "Não encontramos a data de vencimento — confira se o comprovante está completo e legível.",
+      },
+      {
+        anyOf: "beneficiario|favorecido",
+        msg: "Não encontramos o beneficiário/favorecido da guia — o comprovante precisa identificar quem recebeu.",
+      },
+    ],
+  },
+  guia_pericia: {
+    keywords: [
+      {
+        anyOf: "pagamento|pago|valor",
+        msg: "Não encontramos confirmação de pagamento — envie o comprovante pago da taxa da perícia.",
+      },
+      {
+        anyOf: "vencimento",
+        msg: "Não encontramos a data de vencimento — confira se o comprovante está completo e legível.",
+      },
+      {
+        anyOf: "beneficiario|favorecido",
+        msg: "Não encontramos o beneficiário/favorecido da guia — o comprovante precisa identificar quem recebeu.",
+      },
+    ],
+  },
+};
+
+/** Fallback para docTypes sem mapa específico: só confere o nome. */
+export const OCR_DOCTYPE_DEFAULT: OcrDocHint = { keywords: [], exigeNome: true };
