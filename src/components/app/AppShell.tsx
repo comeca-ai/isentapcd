@@ -192,9 +192,18 @@ const NAV_ITEMS = [
 function SidebarContent({ paid }: { paid: boolean }) {
   return (
     <div className="flex h-full flex-col gap-6 p-4">
-      <Link to="/" aria-label="IsentaPCD — página inicial" className="hidden px-2 pt-2 lg:block">
-        <img src="/logo.svg" alt="IsentaPCD" width={180} height={48} className="h-11 w-auto" />
-      </Link>
+      <div className="hidden px-2 pt-2 lg:block">
+        <Link to="/" aria-label="IsentaPCD — página inicial">
+          <img src="/logo.svg" alt="IsentaPCD" width={180} height={48} className="h-11 w-auto" />
+        </Link>
+        <img
+          src="/assinatura-grupo.png"
+          alt="Uma empresa do grupo começa.ai"
+          width={1575}
+          height={291}
+          className="mt-2 h-[20px] w-auto rounded-[4px]"
+        />
+      </div>
 
       <nav aria-label="Navegação do app">
         <ul className="flex flex-col gap-1">

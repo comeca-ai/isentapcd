@@ -71,6 +71,13 @@ function SidebarBrand() {
     <div className="border-b border-ink-700 px-5 py-5">
       <p className="font-display text-h3 font-semibold text-paper-50">IsentaPCD</p>
       <p className="mt-0.5 text-small text-paper-400">Painel interno</p>
+      <img
+        src="/assinatura-grupo.png"
+        alt="Uma empresa do grupo começa.ai"
+        width={1575}
+        height={291}
+        className="mt-2.5 h-[20px] w-auto rounded-[4px]"
+      />
     </div>
   )
 }

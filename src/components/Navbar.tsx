@@ -103,11 +103,20 @@ export default function Navbar() {
 
       <nav
         aria-label="Navegação principal"
-        className="mx-auto flex h-[72px] max-w-wide items-center justify-between gap-4 px-6 lg:px-10"
+        className="mx-auto flex h-[88px] max-w-wide items-center justify-between gap-4 px-6 lg:px-10"
       >
-        <Link to="/" aria-label="IsentaPCD — página inicial" className="shrink-0">
-          <img src="/logo.svg" alt="IsentaPCD" width={180} height={48} className="h-12 w-auto" />
-        </Link>
+        <div className="flex shrink-0 flex-col">
+          <Link to="/" aria-label="IsentaPCD — página inicial">
+            <img src="/logo.svg" alt="IsentaPCD" width={180} height={48} className="h-10 w-auto" />
+          </Link>
+          <img
+            src="/assinatura-grupo.png"
+            alt="Uma empresa do grupo começa.ai"
+            width={1575}
+            height={291}
+            className="mt-1.5 h-[18px] w-auto rounded-[4px] opacity-85"
+          />
+        </div>
 
         {/* Links desktop */}
         <ul className="hidden items-center gap-1 lg:flex">
