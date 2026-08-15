@@ -171,6 +171,12 @@ export const documents = mysqlTable(
       .notNull()
       .default("pending"),
     rejectionReason: text("rejectionReason"),
+    // OCR automático (Mistral) — pipeline async pós-upload
+    ocrStatus: mysqlEnum("ocrStatus", ["none", "processing", "ok", "attention", "failed"])
+      .notNull()
+      .default("none"),
+    ocrSummary: text("ocrSummary"), // JSON: string[] com achados em pt-BR simples
+    ocrAnalyzedAt: datetime("ocrAnalyzedAt"),
     version: int("version").notNull().default(1),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },

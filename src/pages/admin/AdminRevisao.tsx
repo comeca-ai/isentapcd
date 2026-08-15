@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { inferRouterOutputs } from '@trpc/server'
 import { Link } from 'react-router'
-import { Check, FileText, RotateCw, X, ZoomIn, ZoomOut } from 'lucide-react'
+import { Check, FileText, RotateCw, ScanSearch, X, ZoomIn, ZoomOut } from 'lucide-react'
 import { trpc } from '@/providers/trpc'
 import { DOC_TYPE_MAP } from '@contracts/constants'
 import type { AppRouter } from '../../../api/router'
@@ -387,7 +387,10 @@ export default function AdminRevisao() {
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-3">
-              <h3 className="text-small font-bold">{selecionado.label}</h3>
+              {/* Leitura automática (OCR Mistral) ao lado do preview */}
+              <OcrPanel ocrStatus={selecionado.ocrStatus} ocrSummary={selecionado.ocrSummary} />
+
+              <h3 className="mt-3 text-small font-bold">{selecionado.label}</h3>
               <fieldset className="mt-2">
                 <legend className="text-[13px] text-txt-2">
                   Checklist de requisitos (marque o que conferiu)
@@ -487,5 +490,46 @@ export default function AdminRevisao() {
         </div>
       )}
     </div>
+  )
+}
+
+// ── Painel de OCR (leitura automática Mistral) ─────────────────────────────
+
+const OCR_LABEL: Record<string, { texto: string; cls: string }> = {
+  processing: { texto: 'Análise automática em andamento…', cls: 'border-warn/40 bg-warn/10 text-warn' },
+  ok: { texto: 'Verificado automaticamente — tudo certo', cls: 'border-moss-600/40 bg-moss-400/10 text-moss-600' },
+  attention: { texto: 'Precisa de atenção — veja os achados abaixo', cls: 'border-coral-600/50 bg-coral-400/10 text-coral-600' },
+  failed: { texto: 'Análise automática falhou — revise manualmente', cls: 'border-line bg-bg-alt text-txt-2' },
+  none: { texto: 'Sem análise automática', cls: 'border-line bg-bg-alt text-txt-2' },
+}
+
+function ocrAchados(summary: string | null): string[] {
+  if (!summary) return []
+  try {
+    const parsed = JSON.parse(summary) as unknown
+    if (Array.isArray(parsed)) return parsed.filter((s): s is string => typeof s === 'string')
+    return [summary]
+  } catch {
+    return [summary]
+  }
+}
+
+function OcrPanel({ ocrStatus, ocrSummary }: { ocrStatus: string; ocrSummary: string | null }) {
+  const ui = OCR_LABEL[ocrStatus] ?? OCR_LABEL.none
+  const achados = ocrAchados(ocrSummary)
+  return (
+    <section aria-label="Leitura automática (OCR)" className={cn('rounded-input border p-3', ui.cls)}>
+      <p className="flex items-center gap-2 text-small font-bold">
+        <ScanSearch className="size-4 shrink-0" aria-hidden="true" />
+        OCR: {ui.texto}
+      </p>
+      {achados.length > 0 && (
+        <ul className="mt-2 list-disc space-y-1 pl-6 text-small text-txt">
+          {achados.map((a) => (
+            <li key={a}>{a}</li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }

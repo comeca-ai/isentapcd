@@ -134,6 +134,56 @@ export function tplPagamentoConfirmado(name: string): { subject: string; html: s
   };
 }
 
+// ── OCR de documentos (POC v3) ─────────────────────────────────────────────
+export function tplDocumentoRecebido(name: string, docLabel: string): { subject: string; html: string } {
+  return {
+    subject: `Recebemos seu documento: ${docLabel}`,
+    html: layout(
+      "Documento recebido — já estamos analisando",
+      `<p>${name.split(" ")[0]}, recebemos o documento <strong>${docLabel}</strong> e nossa
+       análise automática já está em andamento.</p>
+       <p>Em instantes você recebe outro e-mail com o resultado: tudo certo ou o que ajustar.
+       Depois, nossa equipe ainda faz a revisão humana final.</p>`,
+      { label: "Acompanhar no painel", url: `${PANEL_URL}/documentos` },
+    ),
+  };
+}
+
+export function tplDocumentoOcrOk(name: string, docLabel: string): { subject: string; html: string } {
+  return {
+    subject: `Documento verificado: ${docLabel}`,
+    html: layout(
+      "Tudo certo com seu documento ✅",
+      `<p>${name.split(" ")[0]}, nossa análise automática leu o documento
+       <strong>${docLabel}</strong> e encontrou tudo o que era esperado.</p>
+       <p>Ele segue agora para a revisão humana do nosso time (até 1 dia útil).</p>`,
+      { label: "Ver meus documentos", url: `${PANEL_URL}/documentos` },
+    ),
+  };
+}
+
+export function tplDocumentoOcrAttention(
+  name: string,
+  docLabel: string,
+  achados: string[],
+): { subject: string; html: string } {
+  const lista = achados.map((a) => `<li style="margin:6px 0;">${a}</li>`).join("");
+  return {
+    subject: `Encontramos algo para ajustar: ${docLabel}`,
+    html: layout(
+      "Seu documento precisa de um ajuste",
+      `<p>${name.split(" ")[0]}, ao ler o documento <strong>${docLabel}</strong>, nossa análise
+       automática encontrou pontos que merecem atenção:</p>
+       <ul style="background:#FDF6E3;border-left:4px solid #F2B53F;padding:12px 16px 12px 32px;border-radius:8px;margin:16px 0;">
+         ${lista}
+       </ul>
+       <p>Isso <strong>não</strong> é uma rejeição — é um aviso para você corrigir antes do
+       protocolo. Se estiver tudo certo mesmo assim, nossa equipe confirma na revisão humana.</p>`,
+      { label: "Revisar e reenviar", url: `${PANEL_URL}/documentos` },
+    ),
+  };
+}
+
 export function tplLembretePrazo(
   name: string,
   titulo: string,

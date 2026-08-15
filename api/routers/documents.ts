@@ -12,6 +12,8 @@ import {
   TAX_DOCTYPES,
 } from "@contracts/constants";
 import { recordEvent, recordPaywallTrigger } from "./helpers";
+import { runOcr } from "../ocr";
+import { sendEmail, tplDocumentoRecebido } from "../email";
 
 const uploadSchema = z.object({
   docType: z.string().refine((v) => v in DOC_TYPE_MAP, "Tipo de documento desconhecido."),
@@ -29,6 +31,9 @@ function meta(d: typeof documents.$inferSelect) {
     sizeBytes: d.sizeBytes,
     status: d.status,
     rejectionReason: d.rejectionReason,
+    ocrStatus: d.ocrStatus,
+    ocrSummary: d.ocrSummary,
+    ocrAnalyzedAt: d.ocrAnalyzedAt,
     version: d.version,
     createdAt: d.createdAt,
   };
@@ -82,8 +87,10 @@ export const documentsRouter = createRouter({
       where: and(eq(documents.userId, ctx.user.id), eq(documents.docType, input.docType)),
     });
     let version = 1;
+    let documentId: number;
     if (existing) {
       version = existing.version + 1;
+      documentId = existing.id;
       await db
         .update(documents)
         .set({
@@ -93,27 +100,63 @@ export const documentsRouter = createRouter({
           data: buffer,
           status: "pending",
           rejectionReason: null,
+          ocrStatus: "processing",
+          ocrSummary: null,
+          ocrAnalyzedAt: null,
           version,
           createdAt: new Date(),
         })
         .where(eq(documents.id, existing.id));
     } else {
-      await db.insert(documents).values({
-        userId: ctx.user.id,
-        docType: input.docType,
-        fileName: input.fileName,
-        mimeType: input.mimeType,
-        sizeBytes: buffer.length,
-        data: buffer,
-      });
+      const [{ id }] = await db
+        .insert(documents)
+        .values({
+          userId: ctx.user.id,
+          docType: input.docType,
+          fileName: input.fileName,
+          mimeType: input.mimeType,
+          sizeBytes: buffer.length,
+          data: buffer,
+          ocrStatus: "processing",
+        })
+        .$returningId();
+      documentId = id;
     }
     await recordEvent(ctx.user.id, "document_uploaded", { docType: input.docType, version });
+    // OCR automático (Mistral) — async, não bloqueia a resposta do upload
+    void runOcr(documentId).catch((err) => console.error("[ocr] pipeline falhou:", err));
+    // Aviso de recebimento (no-op sem RESEND_API_KEY)
+    const docLabel = DOC_TYPE_MAP[input.docType]?.label ?? input.docType;
+    const tpl = tplDocumentoRecebido(ctx.user.name, docLabel);
+    void sendEmail({ to: ctx.user.email, subject: tpl.subject, html: tpl.html });
     // 1º comprovante de guia paga → gatilho do paywall
     if ((TAX_DOCTYPES as readonly string[]).includes(input.docType)) {
       await recordPaywallTrigger(ctx.user.id);
     }
     return { ok: true, version, status: "pending" as const };
   }),
+
+  /**
+   * Reprocessa o OCR de um documento (dono ou admin). Útil quando a análise
+   * falhou (ocrStatus="failed") ou o arquivo foi lido parcialmente.
+   */
+  reprocessOcr: authedQuery
+    .input(z.object({ documentId: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const doc = await getDb().query.documents.findFirst({
+        where: eq(documents.id, input.documentId),
+      });
+      if (!doc) throw new TRPCError({ code: "NOT_FOUND", message: "Documento não encontrado." });
+      if (doc.userId !== ctx.user.id && ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Este documento não é seu." });
+      }
+      await getDb()
+        .update(documents)
+        .set({ ocrStatus: "processing", ocrSummary: null })
+        .where(eq(documents.id, doc.id));
+      void runOcr(doc.id).catch((err) => console.error("[ocr] reprocess falhou:", err));
+      return { ok: true };
+    }),
 
   /** Serve o blob autenticado — só o dono ou admin. */
   download: authedQuery

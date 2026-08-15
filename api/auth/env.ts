@@ -18,6 +18,7 @@ export const authEnv = {
   adminEmail: optional("ADMIN_EMAIL"),
   adminPassword: optional("ADMIN_PASSWORD"),
   resendApiKey: optional("RESEND_API_KEY"),
+  mistralApiKey: optional("MISTRAL_API_KEY"),
   emailFrom: optional("EMAIL_FROM", "IsentaPCD <noreply@isentapcd.com.br>"),
   isProduction: process.env.NODE_ENV === "production",
 };

@@ -229,6 +229,8 @@ export const adminRouter = createRouter({
         mimeType: documents.mimeType,
         sizeBytes: documents.sizeBytes,
         status: documents.status,
+        ocrStatus: documents.ocrStatus,
+        ocrSummary: documents.ocrSummary,
         version: documents.version,
         createdAt: documents.createdAt,
         userName: users.name,
