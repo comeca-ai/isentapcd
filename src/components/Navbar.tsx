@@ -114,7 +114,7 @@ export default function Navbar() {
             alt="Uma empresa do grupo começa.ai"
             width={1575}
             height={291}
-            className="mt-1.5 h-[18px] w-auto rounded-[4px] opacity-85"
+            className="mt-1.5 h-[26px] w-auto rounded-[5px] opacity-90"
           />
         </div>
 
