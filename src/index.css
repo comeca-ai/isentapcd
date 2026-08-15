@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Primitivos (design.md §2.1) */
+    --ink-950: #0E1512;
+    --ink-900: #14201B;
+    --ink-800: #1B2A23;
+    --ink-700: #24352D;
+    --paper-50: #F7F3EA;
+    --paper-100: #EFE9DB;
+    --paper-400: #B9B2A0;
+    --amber-400: #F2B53F;
+    --amber-300: #F8CC72;
+    --amber-600: #8A5B0B;
+    --moss-400: #5BC8A0;
+    --moss-600: #16724F;
+    --coral-400: #FF8A6B;
+    --coral-600: #C24A2E;
+    --paper-bg: #F6F2E8;
+    --paper-card: #FFFFFF;
+    --paper-line: #E3DCCB;
+    --ink-900-txt: #182420;
+    --ink-600-txt: #44554D;
+
+    /* Semânticos — escuro: site público (design.md §5) */
+    --bg: var(--ink-950);
+    --bg-alt: var(--ink-900);
+    --surface: var(--ink-800);
+    --line: var(--ink-700);
+    --text: var(--paper-50);
+    --text-2: var(--paper-400);
+    --accent: var(--amber-400);
+    --accent-hover: var(--amber-300);
+    --on-accent: var(--ink-950);
+    --success: var(--moss-400);
+    --warn: var(--amber-400);
+    --danger: var(--coral-400);
+    --focus-ring: var(--amber-400);
+
+    /* shadcn tokens base (mapeados para o tema escuro público) */
+    --background: 150 20% 7%;
+    --foreground: 43 38% 94%;
+    --card: 152 23% 11%;
+    --card-foreground: 43 38% 94%;
+    --popover: 152 23% 11%;
+    --popover-foreground: 43 38% 94%;
+    --primary: 40 88% 60%;
+    --primary-foreground: 150 20% 7%;
+    --secondary: 150 20% 15%;
+    --secondary-foreground: 43 38% 94%;
+    --muted: 150 20% 15%;
+    --muted-foreground: 37 15% 68%;
+    --border: 147 21% 18%;
+    --input: 147 21% 18%;
+    --ring: 40 88% 60%;
+    --destructive: 12 66% 47%;
+    --destructive-foreground: 43 38% 94%;
+    --radius: 0.625rem;
+    --sidebar-background: 150 20% 7%;
+    --sidebar-foreground: 43 38% 94%;
+    --sidebar-primary: 40 88% 60%;
+    --sidebar-primary-foreground: 150 20% 7%;
+    --sidebar-accent: 150 20% 15%;
+    --sidebar-accent-foreground: 43 38% 94%;
+    --sidebar-border: 147 21% 18%;
+    --sidebar-ring: 40 88% 60%;
+  }
+
+  /* Escopo claro: /app e /admin (design.md §5) */
+  .app-light {
+    --bg: var(--paper-bg);
+    --bg-alt: #EFEBDF;
+    --surface: var(--paper-card);
+    --line: var(--paper-line);
+    --text: var(--ink-900-txt);
+    --text-2: var(--ink-600-txt);
+    --accent: var(--moss-600);
+    --accent-hover: #0F5C42;
+    --on-accent: #FFFFFF;
+    --success: var(--moss-600);
+    --warn: var(--amber-600);
+    --danger: var(--coral-600);
+    --focus-ring: var(--moss-600);
+
+    --background: 45 38% 94%;
+    --foreground: 160 20% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 160 20% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 20% 12%;
+    --primary: 158 67% 26%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 44 30% 90%;
+    --secondary-foreground: 160 20% 12%;
+    --muted: 44 30% 90%;
+    --muted-foreground: 155 12% 30%;
+    --border: 43 24% 84%;
+    --input: 43 24% 84%;
+    --ring: 158 67% 26%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 160 20% 12%;
+    --sidebar-primary: 158 67% 26%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 44 30% 90%;
+    --sidebar-accent-foreground: 160 20% 12%;
+    --sidebar-border: 43 24% 84%;
+    --sidebar-ring: 158 67% 26%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bg text-txt font-sans text-body antialiased;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Grão de papel sutil sobre o fundo dark global (desligado no light) */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-image: url("/hero-texture.svg");
+    background-size: 200px 200px;
+    opacity: 0.03;
+  }
+  .app-light::before,
+  body:has(.app-light)::before {
+    opacity: 0;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+    text-wrap: balance;
+    hyphens: none;
+    font-variation-settings: "opsz" 72, "SOFT" 30;
+  }
+
+  p, li {
+    max-width: 68ch;
+  }
+
+  /* Links no corpo: sublinhados sempre (não depender de cor) */
+  main p a,
+  main li a {
+    @apply underline underline-offset-4 decoration-1;
+  }
+
+  /* Foco visível em todo elemento interativo (design.md §2.3) */
+  :focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+
+  /* Números tabulares para contadores */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Slider de preço do simulador (trilha âmbar, handle 28px) */
+  .sim-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(
+      to right,
+      var(--accent) 0%,
+      var(--accent) var(--fill, 50%),
+      var(--line) var(--fill, 50%),
+      var(--line) 100%
+    );
+  }
+  .sim-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--accent);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1.5px var(--accent);
+    cursor: pointer;
+  }
+  .sim-slider::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: var(--accent);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 1.5px var(--accent);
+    cursor: pointer;
+  }
+}
+
+@layer utilities {
+  /* Reduced motion: desligar animações decorativas (design.md §6) */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    .motion-safe-only {
+      animation: none !important;
+      transition: none !important;
+    }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
