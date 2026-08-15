@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" role="img" aria-label="Pasta de documentos vazia">
+  <!-- Pasta aberta vazia com folha voando, traço musgo sobre fundo transparente -->
+  <g fill="none" stroke="#5BC8A0" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <!-- corpo da pasta -->
+    <path d="M110 300 L110 170 Q110 150 130 150 L240 150 L270 190 L470 190 Q490 190 490 210 L490 300 Q490 320 470 320 L130 320 Q110 320 110 300 Z"/>
+    <!-- aba traseira -->
+    <path d="M110 190 L90 170 Q84 162 92 158 L240 150" stroke-width="8" opacity="0.55"/>
+  </g>
+  <!-- folha voando -->
+  <g transform="rotate(14 420 110)">
+    <rect x="370" y="60" width="100" height="120" rx="10" fill="none" stroke="#F2B53F" stroke-width="8"/>
+    <path d="M388 92 H452 M388 116 H452 M388 140 H430" stroke="#F2B53F" stroke-width="7" stroke-linecap="round"/>
+  </g>
+  <!-- linhas de movimento -->
+  <path d="M320 120 Q350 108 362 96 M330 160 Q356 152 366 142" stroke="#5BC8A0" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.7"/>
+</svg>
