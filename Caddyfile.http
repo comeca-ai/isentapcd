@@ -1,0 +1,6 @@
+# Use esta versão enquanto NÃO houver domínio apontado (HTTP puro por IP).
+# cp Caddyfile.http Caddyfile && docker compose restart caddy
+:80 {
+	reverse_proxy app:3000
+	encode zstd gzip
+}

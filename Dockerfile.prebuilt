@@ -12,6 +12,8 @@ COPY node_modules ./node_modules
 COPY dist ./dist
 # migrações e seed são aplicados em deploy/upgrade via `npm run db:migrate`
 COPY db ./db
+COPY api ./api
+COPY tsconfig.json tsconfig.server.json ./
 COPY contracts ./contracts
 COPY drizzle.config.ts ./
 
