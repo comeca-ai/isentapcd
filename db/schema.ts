@@ -92,11 +92,12 @@ export const profiles = mysqlTable("profiles", {
   isDriver: boolean("isDriver"),
   cnhSpecial: boolean("cnhSpecial"),
   laudoInfo: json("laudoInfo"), // { temLaudo, emissor, dataEmissao, cid, teaNivel }
+  condutoresInfo: json("condutoresInfo"), // { condutores: [{nome, cpf, parentesco, cnh}], representante: {...} | null }
   endereco: json("endereco"), // { cep, logradouro, numero, complemento, bairro, cidade, uf }
   intendedVehicleId: bigint("intendedVehicleId", { mode: "number", unsigned: true }).references(
     () => vehicles.id,
   ),
-  purchaseDate: date("purchaseDate"),
+  purchaseDate: date("purchaseDate", { mode: "string" }),
   plateFinalDigit: tinyint("plateFinalDigit"),
   formStep: int("formStep").notNull().default(0),
   completedAt: timestamp("completedAt"),
