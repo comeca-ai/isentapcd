@@ -54,7 +54,7 @@ const DOC_ICONS: Record<string, typeof FileText> = {
 };
 
 /** Achados do OCR (ocrSummary é JSON string[]; tolerante a formato antigo). */
-export function parseOcrFindings(summary: string | null): string[] {
+function parseOcrFindings(summary: string | null): string[] {
   if (!summary) return [];
   try {
     const parsed = JSON.parse(summary) as unknown;
@@ -384,37 +384,39 @@ export function DocsTrail({
     requestAnimationFrame(() => itemRefs.current.get(docType)?.focus());
   };
 
-  let step = 0;
+  // Sequência numerada única, achatada na ordem lógica do processo (DOC_TRAIL)
+  const steps = DOC_TRAIL.flatMap(({ phase, docTypes }) =>
+    docTypes.flatMap((docType) => {
+      const doc = byType.get(docType);
+      return doc ? [{ phase, doc }] : [];
+    }),
+  );
 
   return (
     <ol className="flex flex-col gap-3" aria-label="Trilha de envio de documentos">
-      {DOC_TRAIL.map(({ phase, docTypes }) =>
-        docTypes.map((docType) => {
-          const doc = byType.get(docType);
-          if (!doc) return null;
-          step += 1;
+      {steps.map(({ phase, doc }, idx) => {
+          const step = idx + 1;
           return (
             <TrailStep
-              key={docType}
+              key={doc.docType}
               step={step}
               doc={doc}
               phase={phase}
-              flash={flashDoc === docType}
-              uploadOpen={uploadTarget === docType}
-              onOpenUpload={() => onOpenUpload(docType)}
+              flash={flashDoc === doc.docType}
+              uploadOpen={uploadTarget === doc.docType}
+              onOpenUpload={() => onOpenUpload(doc.docType)}
               onCloseUpload={onCloseUpload}
-              onUpload={(payload) => handleUpload(docType, payload)}
+              onUpload={(payload) => handleUpload(doc.docType, payload)}
               onOpenDetail={onOpenDetail}
               onReprocess={onReprocess}
               reprocessing={reprocessingId !== null && doc.upload?.id === reprocessingId}
               itemRef={(el) => {
-                if (el) itemRefs.current.set(docType, el);
-                else itemRefs.current.delete(docType);
+                if (el) itemRefs.current.set(doc.docType, el);
+                else itemRefs.current.delete(doc.docType);
               }}
             />
           );
-        }),
-      )}
+        })}
     </ol>
   );
 }
