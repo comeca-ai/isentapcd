@@ -146,7 +146,10 @@ export const processStages = mysqlTable(
       .default("pending"),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
-  (t) => [uniqueIndex("process_stages_process_stage_uniq").on(t.processId, t.stageKey)],
+  (t) => [
+    uniqueIndex("process_stages_process_stage_uniq").on(t.processId, t.stageKey),
+    index("process_stages_process_idx").on(t.processId), // suporte à FK (TiDB)
+  ],
 );
 
 export type ProcessStage = typeof processStages.$inferSelect;
@@ -171,7 +174,12 @@ export const documents = mysqlTable(
     version: int("version").notNull().default(1),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (t) => [uniqueIndex("documents_user_doctype_uniq").on(t.userId, t.docType)],
+  (t) => [
+    uniqueIndex("documents_user_doctype_uniq").on(t.userId, t.docType),
+    // TiDB exige um índice dedicado para a FK (não permite derrubar o unique
+    // que a sustenta durante recriações de tabela).
+    index("documents_user_idx").on(t.userId),
+  ],
 );
 
 export type Document = typeof documents.$inferSelect;
@@ -205,5 +213,8 @@ export const emailReminders = mysqlTable(
     refKey: varchar("refKey", { length: 120 }).notNull(),
     sentAt: timestamp("sentAt").defaultNow().notNull(),
   },
-  (t) => [uniqueIndex("email_reminders_uniq").on(t.userId, t.kind, t.refKey)],
+  (t) => [
+    uniqueIndex("email_reminders_uniq").on(t.userId, t.kind, t.refKey),
+    index("email_reminders_user_idx").on(t.userId), // suporte à FK (TiDB)
+  ],
 );
