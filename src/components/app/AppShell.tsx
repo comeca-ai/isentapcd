@@ -201,7 +201,7 @@ function SidebarContent({ paid }: { paid: boolean }) {
           alt="Uma empresa do grupo começa.ai"
           width={1575}
           height={291}
-          className="mt-2 h-[24px] w-auto rounded-[5px]"
+          className="mt-2.5 h-[34px] w-auto rounded-md"
         />
       </div>
 
