@@ -184,6 +184,34 @@ export function tplDocumentoOcrAttention(
   };
 }
 
+export function tplCadastroConcluido(name: string): { subject: string; html: string } {
+  return {
+    subject: "Seu cadastro está completo — que bom ter você aqui! 🎉",
+    html: layout(
+      `Cadastro concluído, ${name.split(" ")[0]}!`,
+      `<p>Que notícia boa: seu cadastro está completinho. O próximo passo é a
+       <strong>trilha de documentos</strong> — a cada envio, nossa leitura automática (OCR)
+       verifica se está tudo certo e você recebe um e-mail como este a cada movimentação.</p>
+       <p>Estamos aqui para qualquer dúvida, no painel ou no WhatsApp. Vamos juntos até a nota
+       fiscal com desconto. 💚</p>`,
+      { label: "Enviar meus documentos", url: `${PANEL_URL}/documentos` },
+    ),
+  };
+}
+
+export function tplEtapaAvancou(name: string, stageTitle: string): { subject: string; html: string } {
+  return {
+    subject: `Seu processo avançou: ${stageTitle} ✅`,
+    html: layout(
+      `Boa notícia, ${name.split(" ")[0]}!`,
+      `<p>A etapa <strong>${stageTitle}</strong> do seu processo de isenção foi concluída.
+       Cada passo desses te deixa mais perto do carro 0 km com os impostos isentos.</p>
+       <p>Sua timeline mostra o que já foi e o que vem agora — sem juridiquês, sem surpresa.</p>`,
+      { label: "Ver minha timeline", url: PANEL_URL },
+    ),
+  };
+}
+
 export function tplLembretePrazo(
   name: string,
   titulo: string,

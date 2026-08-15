@@ -6,6 +6,7 @@ import { getDb } from "../queries/connection";
 import { profiles } from "@db/schema";
 import { UF_LIST } from "@contracts/constants";
 import { recordEvent } from "./helpers";
+import { sendEmail, tplCadastroConcluido } from "../email";
 
 const cpfSchema = z
   .string()
@@ -163,6 +164,8 @@ export const profileRouter = createRouter({
       .set({ completedAt: new Date(), formStep: 5 })
       .where(eq(profiles.userId, ctx.user.id));
     await recordEvent(ctx.user.id, "profile_completed");
+    // E-mail gentil de cadastro concluído (Resend; no-op com log se sem chave)
+    await sendEmail({ to: ctx.user.email, ...tplCadastroConcluido(ctx.user.name) });
     return { ok: true };
   }),
 });

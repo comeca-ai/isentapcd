@@ -21,7 +21,12 @@ import {
   type StageStatus,
 } from "@contracts/constants";
 import { recordEvent } from "./helpers";
-import { sendEmail, tplDocumentoAprovado, tplDocumentoRejeitado } from "../email";
+import {
+  sendEmail,
+  tplDocumentoAprovado,
+  tplDocumentoRejeitado,
+  tplEtapaAvancou,
+} from "../email";
 
 const leadsFilterSchema = z.object({
   uf: z.enum(UF_LIST).optional(),
@@ -214,6 +219,16 @@ export const adminRouter = createRouter({
         stageKey: input.stageKey,
         status: input.status,
       });
+      // E-mail gentil ao cliente quando uma etapa é concluída pelo time
+      if (input.status === "done") {
+        const owner = await db.query.users.findFirst({ where: eq(users.id, process.userId) });
+        if (owner) {
+          await sendEmail({
+            to: owner.email,
+            ...tplEtapaAvancou(owner.name, def.title),
+          });
+        }
+      }
       return { ok: true };
     }),
 
