@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { createRouter, authedQuery } from "../middleware";
 import { getDb } from "../queries/connection";
-import { profiles } from "@db/schema";
+import { leads, profiles } from "@db/schema";
 import { UF_LIST } from "@contracts/constants";
-import { recordEvent } from "./helpers";
+import { markStageDoneForUser, recordEvent } from "./helpers";
 import { sendEmail, tplCadastroConcluido } from "../email";
 
 const cpfSchema = z
@@ -119,6 +119,27 @@ export const profileRouter = createRouter({
       await db.update(profiles).set(values).where(eq(profiles.userId, ctx.user.id));
     } else {
       await db.insert(profiles).values({ userId: ctx.user.id, ...values });
+    }
+    // Backfill anti-arrasto: se o telefone bate com um lead de quiz/simulador
+    // anterior ao cadastro, vincula o lead à conta e conclui a etapa "descoberta".
+    if (step === 1 && "telefone" in data && typeof data.telefone === "string") {
+      const digits = data.telefone.replace(/\D/g, "");
+      if (digits.length >= 8) {
+        const matched = await db
+          .select({ id: leads.id, source: leads.source })
+          .from(leads)
+          .where(sql`REGEXP_REPLACE(${leads.whatsapp}, '[^0-9]', '') = ${digits}`)
+          .limit(5);
+        if (matched.length > 0) {
+          await db
+            .update(leads)
+            .set({ userId: ctx.user.id })
+            .where(sql`REGEXP_REPLACE(${leads.whatsapp}, '[^0-9]', '') = ${digits}`);
+          if (matched.some((l) => l.source === "quiz")) {
+            await markStageDoneForUser(ctx.user.id, "descoberta");
+          }
+        }
+      }
     }
     return { ok: true, formStep: values.formStep };
   }),

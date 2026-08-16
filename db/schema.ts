@@ -71,10 +71,12 @@ export const leads = mysqlTable(
     quizAnswers: json("quizAnswers"),
     eligibilityResult: json("eligibilityResult"),
     referredBy: varchar("referredBy", { length: 255 }),
+    // vínculo com a conta quando o lead depois se registra (ou faz o quiz logado)
+    userId: bigint("userId", { mode: "number", unsigned: true }),
     status: mysqlEnum("status", ["new", "contacted", "converted", "lost"]).notNull().default("new"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
-  (t) => [index("leads_status_idx").on(t.status), index("leads_uf_idx").on(t.uf)],
+  (t) => [index("leads_status_idx").on(t.status), index("leads_uf_idx").on(t.uf), index("leads_user_idx").on(t.userId)],
 );
 
 export type Lead = typeof leads.$inferSelect;

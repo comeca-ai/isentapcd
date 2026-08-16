@@ -36,6 +36,29 @@ export async function getStagesByProcess(processId: number) {
   return getDb().query.processStages.findMany({ where: eq(processStages.processId, processId) });
 }
 
+/**
+ * Marca uma etapa como "done" para o processo do usuário (sem violar deps —
+ * usado para conclusões automáticas, ex.: quiz concluído ⇒ "descoberta" done)
+ * e recalcula currentStage. Não faz nada se a etapa já estiver done.
+ */
+export async function markStageDoneForUser(userId: number, stageKey: string) {
+  const db = getDb();
+  const process = await getProcessByUser(userId);
+  if (!process) return;
+  const rows = await getStagesByProcess(process.id);
+  const current = rows.find((r) => r.stageKey === stageKey);
+  if (!current || current.status === "done") return;
+  await db
+    .update(processStages)
+    .set({ status: "done", updatedAt: new Date() })
+    .where(eq(processStages.id, current.id));
+  const byKey = new Map(
+    rows.map((r) => [r.stageKey, r.stageKey === stageKey ? "done" : r.status]),
+  );
+  const next = STAGES.find((s) => byKey.get(s.key) !== "done") ?? STAGES[STAGES.length - 1];
+  await db.update(processes).set({ currentStage: next.key }).where(eq(processes.id, process.id));
+}
+
 export function publicUser(u: { id: number; email: string; name: string; role: "user" | "admin"; createdAt: Date }) {
   return { id: u.id, email: u.email, name: u.name, role: u.role, createdAt: u.createdAt };
 }

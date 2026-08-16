@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createRouter, publicQuery } from "../middleware";
 import { getDb } from "../queries/connection";
 import { leads } from "@db/schema";
+import { markStageDoneForUser, recordEvent } from "./helpers";
 import {
   UF_LIST,
   FEDERAL,
@@ -142,7 +143,7 @@ export function evaluateEligibility(a: QuizAnswers): EligibilityResult {
 export const quizRouter = createRouter({
   submit: publicQuery
     .input(z.object({ answers: answersSchema, contato: contatoSchema }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const result = evaluateEligibility(input.answers);
       const [{ id }] = await getDb()
         .insert(leads)
@@ -155,8 +156,15 @@ export const quizRouter = createRouter({
           quizAnswers: input.answers,
           eligibilityResult: result,
           referredBy: input.contato.referredBy ?? null,
+          userId: ctx.user?.id ?? null,
         })
         .$returningId();
+      // Quiz concluído por usuário logado ⇒ etapa "descoberta" vira done
+      // (some o banner "ainda não fez a pré-análise" e o anel de progresso reflete).
+      if (ctx.user) {
+        await markStageDoneForUser(ctx.user.id, "descoberta");
+        await recordEvent(ctx.user.id, "quiz_completed", { leadId: id, status: result.status });
+      }
       return { leadId: id, result };
     }),
 });
