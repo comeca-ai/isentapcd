@@ -87,6 +87,10 @@ export const stagesRouter = createRouter({
           title: def.title,
           short: def.short,
           description: def.description,
+          objetivo: def.objetivo,
+          nossoPapel: def.nossoPapel,
+          seuPapel: def.seuPapel,
+          terminaQuando: def.terminaQuando,
           status,
           postGate: def.postGate,
           locked: def.postGate && !paid && PAYWALL_ENABLED, // cadeado visual no front

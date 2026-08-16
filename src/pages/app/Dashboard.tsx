@@ -344,7 +344,7 @@ type DocChecklist = RouterOutputs['documents']['checklist']
 
 const STAGE_CTA: Record<string, { to: string; label: string }> = {
   descoberta: { to: '/pre-analise', label: 'Fazer pré-análise' },
-  mapa: { to: '/guia', label: 'Ver orientações' },
+  mapa: { to: '/app/mapa', label: 'Ver meu mapa' },
   documentos: { to: '/app/documentos', label: 'Continuar checklist' },
 }
 
@@ -432,6 +432,25 @@ function StageRow({
         ) : (
           <>
             <p className="mt-1 text-small text-txt-2">{stage.description}</p>
+            {/* Clareza da etapa: objetivo / papéis / critério de fim (lição de UX) */}
+            <dl className="mt-3 grid gap-2 rounded-input border border-line bg-bg-alt/60 p-4 text-small sm:grid-cols-2">
+              <div>
+                <dt className="font-bold text-txt">🎯 Objetivo</dt>
+                <dd className="mt-0.5 text-txt-2">{stage.objetivo}</dd>
+              </div>
+              <div>
+                <dt className="font-bold text-txt">🫱 O que você faz</dt>
+                <dd className="mt-0.5 text-txt-2">{stage.seuPapel}</dd>
+              </div>
+              <div>
+                <dt className="font-bold text-txt">🤝 O que a gente faz</dt>
+                <dd className="mt-0.5 text-txt-2">{stage.nossoPapel}</dd>
+              </div>
+              <div>
+                <dt className="font-bold text-txt">🏁 Termina quando</dt>
+                <dd className="mt-0.5 text-txt-2">{stage.terminaQuando}</dd>
+              </div>
+            </dl>
             {/* Meta contextual + dependências em texto */}
             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-small">
               {docsMeta && (

@@ -881,6 +881,11 @@ export interface StageDef {
   description: string;
   dependsOn: StageKey[]; // etapas que precisam estar "done"
   postGate: boolean; // etapa de execução após o paywall (R$ 497)
+  // Clareza da jornada (lição: toda etapa precisa deixar começo/meio/fim óbvios)
+  objetivo: string; // por que esta etapa existe
+  nossoPapel: string; // o que a plataforma/time faz
+  seuPapel: string; // o que o cliente precisa fazer
+  terminaQuando: string; // critério objetivo de conclusão
 }
 
 export const STAGES: StageDef[] = [
@@ -892,6 +897,10 @@ export const STAGES: StageDef[] = [
     description: "Quiz de elegibilidade de 2 minutos: descubra se você tem direito.",
     dependsOn: [],
     postGate: false,
+    objetivo: "Responder à pergunta que trava todo mundo: \"eu (ou quem eu cuido) tenho direito?\"",
+    nossoPapel: "Rodar as regras oficiais de 2026 nas suas respostas e te dar um veredito em linguagem humana, com pendências explicadas.",
+    seuPapel: "Responder o quiz de 2 minutos (dá para começar sem conta, sem documento).",
+    terminaQuando: "Você recebe o resultado: elegível, elegível com pendências ou não elegível — com o porquê de cada ponto.",
   },
   {
     key: "mapa",
@@ -901,6 +910,10 @@ export const STAGES: StageDef[] = [
     description: "Receba o passo a passo específico do seu estado, com portais e prazos oficiais.",
     dependsOn: ["descoberta"],
     postGate: false,
+    objetivo: "Transformar \"tenho direito\" num plano concreto para o SEU estado — porque ICMS e IPVA mudam de UF para UF (teto, portal, guias e prazos).",
+    nossoPapel: "Montar o mapa da sua UF com dados oficiais: o que vale aí, qual portal usar, quais guias precisam estar pagas e quais prazos não podem estourar.",
+    seuPapel: "Ler o mapa (5 minutos) e confirmar com o botão \"Li e entendi meu mapa\".",
+    terminaQuando: "Você confirma a leitura do mapa — aí o checklist de documentos da etapa 3 já nasce certinho para o seu estado.",
   },
   {
     key: "documentos",
@@ -910,6 +923,10 @@ export const STAGES: StageDef[] = [
     description: "Monte o checklist por órgão e envie os documentos para revisão.",
     dependsOn: ["mapa"],
     postGate: false,
+    objetivo: "Provar o direito com a papelada certa — na primeira tentativa (documento errado é a causa nº 1 de indeferimento).",
+    nossoPapel: "Ler cada arquivo automaticamente (OCR), avisar por e-mail se algo precisa de ajuste e revisar de verdade com olho humano.",
+    seuPapel: "Seguir a trilha e enviar cada documento (foto do celular vale).",
+    terminaQuando: "Todos os documentos obrigatórios do seu caso estão enviados e aprovados pelo time.",
   },
   {
     key: "ipi",
@@ -919,6 +936,10 @@ export const STAGES: StageDef[] = [
     description: "Protocolo no SISEN com conta Gov.br. Autorização válida por 270 dias.",
     dependsOn: ["documentos"],
     postGate: true,
+    objetivo: "Obter a isenção federal (IPI) — sem ela, o ICMS nem começa na maioria dos estados.",
+    nossoPapel: "Preparar o protocolo com seus documentos aprovados e te guiar tela a tela no SISEN (nunca pedimos sua senha do Gov.br).",
+    seuPapel: "Acompanhar o protocolo e responder rápido se a Receita pedir complemento.",
+    terminaQuando: "A Receita defere e emite a autorização — ela vale 270 dias para a compra.",
   },
   {
     key: "icms",
@@ -928,6 +949,10 @@ export const STAGES: StageDef[] = [
     description: "Depende do IPI deferido (exceto Síndrome de Down fora de SP). Autorização válida por 180 dias.",
     dependsOn: ["ipi"],
     postGate: true,
+    objetivo: "Obter a isenção estadual (ICMS) — é ela que libera o preço com desconto na concessionária.",
+    nossoPapel: "Protocolar no portal oficial da sua UF com o IPI já deferido e monitorar a análise.",
+    seuPapel: "Garantir que guias/taxas do estado estejam pagas antes (quando o seu estado cobra) e aguardar a análise.",
+    terminaQuando: "A Sefaz da sua UF defere e emite a autorização — em geral válida por 180 dias.",
   },
   {
     key: "compra",
@@ -937,6 +962,10 @@ export const STAGES: StageDef[] = [
     description: "Compre com a NF em nome da PCD, IPI destacado como isento, e apresente a NF à Sefaz até o 15º dia útil.",
     dependsOn: ["icms"],
     postGate: true,
+    objetivo: "Comprar o carro com o desconto valendo — a nota fiscal certa é o que materializa a economia.",
+    nossoPapel: "Conferir os dados da NF antes de emitir e te lembrar do prazo fatal de apresentá-la à Sefaz (15º dia útil).",
+    seuPapel: "Comprar dentro do teto da sua UF, com a NF em nome da PCD e IPI destacado como isento.",
+    terminaQuando: "A NF é emitida corretamente e apresentada à Sefaz dentro do prazo.",
   },
   {
     key: "pos_compra",
@@ -946,6 +975,10 @@ export const STAGES: StageDef[] = [
     description: "Pedido de isenção de IPVA, prazos pós-compra da sua UF e lembretes de carência (2/4 anos).",
     dependsOn: ["compra"],
     postGate: true,
+    objetivo: "Fechar o pacote: IPVA isento (ou reduzido) e nenhum benefício perdido por prazo bobo.",
+    nossoPapel: "Protocolar o IPVA dentro do prazo da sua UF (ex.: SP = 30 dias da NF) e te lembrar das carências e do licenciamento anual por e-mail.",
+    seuPapel: "Nos avisar quando o carro for emplacado e manter os documentos em dia todo ano.",
+    terminaQuando: "IPVA isento confirmado e lembretes anuais armados — sua jornada vira acompanhamento contínuo.",
   },
 ];
 

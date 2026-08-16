@@ -16,6 +16,7 @@ import PreAnalise from '@/pages/PreAnalise'
 import Roadmap from '@/pages/Roadmap'
 import AppShell from '@/components/app/AppShell'
 import Dashboard from '@/pages/app/Dashboard'
+import Mapa from '@/pages/app/Mapa'
 import Documentos from '@/pages/app/Documentos'
 import Cadastro from '@/pages/app/Cadastro'
 import Pagamento from '@/pages/app/Pagamento'
@@ -50,6 +51,7 @@ export default function App() {
       {/* Área logada (claro, escopo .app-light). Dashboard/Pagamento/Conta já se
           embrulham em AppShell; Documentos/Cadastro recebem o shell aqui. */}
       <Route path="/app" element={<RequireAuth><Dashboard /></RequireAuth>} />
+      <Route path="/app/mapa" element={<RequireAuth><Mapa /></RequireAuth>} />
       <Route path="/app/documentos" element={<RequireAuth><AppShell><Documentos /></AppShell></RequireAuth>} />
       <Route path="/app/cadastro" element={<RequireAuth><AppShell><Cadastro /></AppShell></RequireAuth>} />
       <Route path="/app/pagamento" element={<RequireAuth><Pagamento /></RequireAuth>} />

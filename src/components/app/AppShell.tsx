@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Gift,
   Bell,
+  Map,
 } from 'lucide-react'
 import { trpc } from '@/providers/trpc'
 import { useAuth } from '@/hooks/useAuth'
@@ -184,6 +185,7 @@ export { AppShell }
 
 const NAV_ITEMS = [
   { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/app/mapa', label: 'Meu mapa', icon: Map, end: false },
   { to: '/app/documentos', label: 'Meus documentos', icon: FolderOpen, end: false },
   { to: '/app/cadastro', label: 'Meu cadastro', icon: ClipboardList, end: false },
   { to: '/app/conta', label: 'Conta', icon: User, end: false },
